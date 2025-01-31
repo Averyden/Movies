@@ -11,5 +11,9 @@
             Email = email;
             PhoneNumebr = phone;
         }
+
+        public override string ToString() {
+            return $"{Name};{Email}";
+        }
     }
 }
