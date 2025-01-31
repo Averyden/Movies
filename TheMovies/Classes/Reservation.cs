@@ -32,6 +32,11 @@
             return customer.ToString();
         }
 
+        public string GetShowInfo()
+        {
+            return show.ToString();
+        }
+
         public string GetLocation()
         {
             return cinema.Location;
