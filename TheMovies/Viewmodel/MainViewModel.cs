@@ -94,6 +94,20 @@ namespace TheMovies
         }
 
 
+
+        public ReservationViewModel SelectedReserve
+        {
+            get => _selectedReserve;
+            set
+            {
+                if (_selectedReserve != value)
+                {
+                    _selectedReserve = value;
+                    OnPropertyChanged(nameof(SelectedReserve));
+                }
+            }
+        }
+
         public MainViewModel() 
         {
             AddCommand = new CommandHandler(OnAddClicked);
