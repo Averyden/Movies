@@ -141,7 +141,7 @@ namespace TheMovies
 
             SelectedReserve = newVM;
 
-            reserveRepo.Add(reserve);
+            reserveRepo.Add(_amount, fullPrice, seats, show, cus);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
