@@ -13,6 +13,8 @@ namespace TheMovies
 
         public ObservableCollection<ReservationViewModel> ReserveVM { get; set; }
         public ICommand AddCommand { get; }
+        public ICommand DelCommand { get; }
+        public ICommand ShowCommand { get; }
 
         private int _amount; 
         private string _startTime;
@@ -115,6 +117,10 @@ namespace TheMovies
         {
             AddCommand = new CommandHandler(OnAddClicked);
 
+            //DelCommand = new CommandHandler();
+
+            ShowCommand = new CommandHandler(OnShowClicked);
+
             ReserveVM = new ObservableCollection<ReservationViewModel>();
 
             foreach (Reservation reservation in reserveRepo.GetAll())
@@ -122,6 +128,16 @@ namespace TheMovies
                 ReservationViewModel newVM = new ReservationViewModel(reservation);
                 ReserveVM.Add(newVM);
             }
+        }
+
+        private void OnDelClicked()
+        {
+
+        }
+
+        private void OnShowClicked() 
+        {
+            MessageBox.Show($"Kunde Email: {SelectedReserve.CusMail}\nKunde Navn: {SelectedReserve.CusName}\nMængde Biletter for reservation: {SelectedReserve.Amount}\nBiograf for reservation: {Cinema}\nBiograf lokation: {CinemaLocation}\nDato for reservation: {ShowDate.ToShortDateString()}\nTidspunkt for forstilling: {StartTime}", "Information for reservation");
         }
 
         private void OnAddClicked()
