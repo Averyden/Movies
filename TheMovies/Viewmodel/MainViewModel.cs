@@ -136,6 +136,11 @@ namespace TheMovies
 
             Reservation reserve = new Reservation(_amount, fullPrice, seats, show, cus);
 
+            ReservationViewModel newVM = new ReservationViewModel(reserve);
+            ReserveVM.Add(newVM);
+
+            SelectedReserve = newVM;
+
             reserveRepo.Add(reserve);
         }
 
