@@ -30,6 +30,7 @@ namespace TheMovies
                     Debug.WriteLine($"An error occurred while creating the file: {ex.Message}");
                 }
             }
+
             InitializeRepository();
         }
 
@@ -37,17 +38,15 @@ namespace TheMovies
         private void InitializeRepository()
         {
             try
-            {   // Open the text file using a stream reader.
+            {
                 using (StreamReader sr = new StreamReader(filePath))
                 {
-                    string line = sr.ReadLine();
-
-                    while (line != null)
+                    string line;
+                    while ((line = sr.ReadLine()) != null)
                     {
                         string[] parts = line.Split(',');
 
                         string seatInfo = parts[2];
-
                         string[] seats = seatInfo.Split("|");
 
                         Customer newCus = new Customer(parts[3], parts[4], parts[5]);
@@ -56,14 +55,22 @@ namespace TheMovies
 
                         Show newShow = new Show(parts[6], DateTime.Parse(parts[7]), stupidMovie);
 
-                        Add(int.Parse(parts[0]), double.Parse(parts[1]), seats, newShow, newCus);
+                        
+                        Reservation reservation = new Reservation(
+                            int.Parse(parts[0]),
+                            double.Parse(parts[1]),
+                            seats,
+                            newShow,
+                            newCus
+                        );
 
-                        line = sr.ReadLine();
+                        reservations.Add(reservation); 
                     }
                 }
             }
-            catch (IOException)
+            catch (IOException ex)
             {
+                Debug.WriteLine($"File Read Error: {ex.Message}");
                 throw;
             }
         }
@@ -93,26 +100,34 @@ namespace TheMovies
 
         public void Save()
         {
-            using (StreamWriter sw = new StreamWriter(filePath, false)) 
+            try
             {
-                foreach (Reservation item in reservations)
+                using (StreamWriter sw = new StreamWriter(filePath))
                 {
-                    string final = $"{item.Amount},{item.Price},";
+                    foreach (Reservation item in reservations)
+                    {
+                        string final = $"{item.Amount},{item.Price},";
 
-                    string seatString = string.Join("|", item.Seat); 
-                    final += $"{seatString},";
+                        string seatString = string.Join("|", item.Seat);
+                        final += $"{seatString},";
 
-                    string[] cusInfo = item.GetCustomerInfo().Split(";");
-                    final += $"{cusInfo[0]},{cusInfo[1]},{cusInfo[2]},";
+                        string[] cusInfo = item.GetCustomerInfo().Split(";");
+                        final += $"{cusInfo[0]},{cusInfo[1]},{cusInfo[2]},";
 
-                    string[] showInfo = item.GetShowInfo().Split(";");
-                    final += $"{showInfo[0]},{showInfo[1]},";
+                        string[] showInfo = item.GetShowInfo().Split(";");
+                        final += $"{showInfo[0]},{showInfo[1]},";
 
-                    string[] movieInfo = item.GetMovieInfoFromShow().Split(";");
-                    final += $"{movieInfo[0]},{movieInfo[1]},{movieInfo[2]},{movieInfo[3]}";
+                        string[] movieInfo = item.GetMovieInfoFromShow().Split(";");
+                        final += $"{movieInfo[0]},{movieInfo[1]},{movieInfo[2]},{movieInfo[3]}";
 
-                    sw.WriteLine(final);
+                        sw.WriteLine(final);
+                    }
                 }
+            }
+            catch (IOException ex)
+            {
+                Debug.WriteLine($"File Write Error: {ex.Message}");
+                throw;
             }
         }
 
