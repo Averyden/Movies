@@ -21,7 +21,7 @@
 
         public override string ToString()
         {
-            return $"{StartTime};{Date.ToShortDateString}";
+            return $"{StartTime};{Date.ToShortDateString()}";
         }
     }
 }
