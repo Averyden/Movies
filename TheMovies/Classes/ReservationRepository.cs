@@ -18,7 +18,7 @@ namespace TheMovies
         {
             try
             {   // Open the text file using a stream reader.
-                using (StreamReader sr = new StreamReader("Reservations.csv"))
+                using (StreamReader sr = new StreamReader("Reservations.txt"))
                 {
                     string line = sr.ReadLine();
 
@@ -71,7 +71,37 @@ namespace TheMovies
 
         public void Save(int id) 
         {
-            
+            foreach (Reservation item in reservations) 
+            {
+                using (StreamWriter sw = new StreamWriter("Reservations.txt"))
+                {
+                    string final = $"{item.Amount},{item.Price},";
+
+                    int seatAmt = item.Seat.Length;
+
+                    string seatString = "";
+
+                    for (int i = 0; i < seatAmt; i++)
+                    {
+                        seatString += item.Seat[i];
+
+                        if (i < seatAmt - 1)
+                        {
+                            seatString += "|";
+                        }
+                    }
+
+                    final += $"{seatString},";
+
+                    string[] cusInfo = item.GetCustomerInfo().Split(";");
+
+                    final += $"{cusInfo[0]},{cusInfo[1]},{cusInfo[2]},";
+
+
+
+
+                }
+            }
         }
 
 
