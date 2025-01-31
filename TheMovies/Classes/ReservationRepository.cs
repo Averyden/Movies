@@ -6,7 +6,7 @@ namespace TheMovies
 {
     public class ReservationRepository
     {
-        private ObservableCollection<Reservation> reservations = new ObservableCollection<Reservation>();
+        private List<Reservation> reservations = new List<Reservation>();
 
         //private void InitializeRepository()
         //{
@@ -47,9 +47,13 @@ namespace TheMovies
             
         }
 
+
         public void Remove(int id) { }
 
-        //public List<Reservation> GetAll() { }
+        public List<Reservation> GetAll() 
+        {
+            return reservations;
+        }
 
     }
 }
