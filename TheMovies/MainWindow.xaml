@@ -49,9 +49,17 @@
         </ComboBox>
 
 
-        <ListBox d:ItemsSource="{d:SampleData ItemCount=15}" Grid.Row="1" Grid.RowSpan="2" Grid.Column="2" BorderBrush="Black" Margin="30,0,30,0"/>
+        <ListBox ItemsSource="{Binding ReserveVM}" SelectedItem="{Binding SelectedReservation}" Grid.Row="1" Grid.RowSpan="2" Grid.Column="2" BorderBrush="Black" Margin="30,0,30,0">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding CusMail}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
 
-        <Label Content="Biograf" Grid.Row="1" Grid.Column="0" Margin="30,0,30,50" VerticalAlignment="Center"/>
+            <Label Content="Biograf" Grid.Row="1" Grid.Column="0" Margin="30,0,30,50" VerticalAlignment="Center"/>
         <ComboBox SelectedValue="{Binding Cinema}" x:Name="cbxCinema" Height="25" Grid.Row="1" Margin="30,0,30,0">
             <ComboBoxItem Content="Cinemaxx"/>
             <ComboBoxItem Content="Nordisk Film"/>
