@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
@@ -9,6 +10,8 @@ namespace TheMovies
     {
         private ReservationRepository reserveRepo = new ReservationRepository();
         private ReservationViewModel _selectedReserve;
+
+        public ObservableCollection<ReservationViewModel> ReserveVM { get; set; }
         public ICommand AddCommand { get; }
 
         private int _amount; 
@@ -111,6 +114,14 @@ namespace TheMovies
         public MainViewModel() 
         {
             AddCommand = new CommandHandler(OnAddClicked);
+
+            ReserveVM = new ObservableCollection<ReservationViewModel>();
+
+            foreach (Reservation reservation in reserveRepo.GetAll())
+            {
+                ReservationViewModel newVM = new ReservationViewModel(reservation);
+                ReserveVM.Add(newVM);
+            }
         }
 
         private void OnAddClicked()
