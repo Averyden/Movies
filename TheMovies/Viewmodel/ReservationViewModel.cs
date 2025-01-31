@@ -28,6 +28,10 @@
             CusMail = CusInfo[1];
         }
 
+        public void DelReserve(int id)
+        {
+            Repository.Remove(id);
+        }
 
     }
 }
