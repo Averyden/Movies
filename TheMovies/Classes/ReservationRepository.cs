@@ -1,15 +1,35 @@
-﻿using System.Collections.ObjectModel;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
+using System;
 
 namespace TheMovies
 {
     public class ReservationRepository
     {
         private List<Reservation> reservations = new List<Reservation>();
-        
+
+        private readonly string filePath = "Reservations.txt";
+
         public ReservationRepository() 
         {
+            if (File.Exists(filePath))
+            {
+                Debug.WriteLine("ok we good YIPPEE");
+            }
+            else
+            {
+                try
+                {
+                    using (FileStream fs = File.Create(filePath))
+                    {
+                        Debug.WriteLine("File created successfully!");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"An error occurred while creating the file: {ex.Message}");
+                }
+            }
             InitializeRepository();
         }
 
@@ -18,7 +38,7 @@ namespace TheMovies
         {
             try
             {   // Open the text file using a stream reader.
-                using (StreamReader sr = new StreamReader("Reservations.txt"))
+                using (StreamReader sr = new StreamReader(filePath))
                 {
                     string line = sr.ReadLine();
 
@@ -65,41 +85,33 @@ namespace TheMovies
                 throw new ArgumentException("Not all arguments are valid");
             }
 
+            Save();
+
             return result;
         }
 
 
-        public void Save(int id) 
+        public void Save()
         {
-            foreach (Reservation item in reservations) 
+            using (StreamWriter sw = new StreamWriter(filePath, false)) 
             {
-                using (StreamWriter sw = new StreamWriter("Reservations.txt"))
+                foreach (Reservation item in reservations)
                 {
                     string final = $"{item.Amount},{item.Price},";
 
-                    int seatAmt = item.Seat.Length;
-
-                    string seatString = "";
-
-                    for (int i = 0; i < seatAmt; i++)
-                    {
-                        seatString += item.Seat[i];
-
-                        if (i < seatAmt - 1)
-                        {
-                            seatString += "|";
-                        }
-                    }
-
+                    string seatString = string.Join("|", item.Seat); 
                     final += $"{seatString},";
 
                     string[] cusInfo = item.GetCustomerInfo().Split(";");
-
                     final += $"{cusInfo[0]},{cusInfo[1]},{cusInfo[2]},";
 
+                    string[] showInfo = item.GetShowInfo().Split(";");
+                    final += $"{showInfo[0]},{showInfo[1]},";
 
+                    string[] movieInfo = item.GetMovieInfoFromShow().Split(";");
+                    final += $"{movieInfo[0]},{movieInfo[1]},{movieInfo[2]},{movieInfo[3]}";
 
-
+                    sw.WriteLine(final);
                 }
             }
         }
