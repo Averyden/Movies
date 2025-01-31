@@ -7,40 +7,67 @@ namespace TheMovies
     public class ReservationRepository
     {
         private List<Reservation> reservations = new List<Reservation>();
-
-        //private void InitializeRepository()
-        //{
-        //    try
-        //    {   // Open the text file using a stream reader.
-        //        using (StreamReader sr = new StreamReader("Persons.csv"))
-        //        {
-        //            // Read the stream to a string, and instantiate a Person object
-        //            string line = sr.ReadLine();
-
-        //            while (line != null)
-        //            {
-        //                string[] parts = line.Split(',');
-
-        //                // parts[0] contains first name, parts[1] contains last name, parts[2] contains age as text, parts[3] contains phone
-
-        //                Add(parts[0], parts[1], int.Parse(parts[2]), parts[3]);
-
-        //                //Read the next line
-        //                line = sr.ReadLine();
-        //            }
-        //        }
-        //    }
-        //    catch (IOException)
-        //    {
-        //        throw;
-        //    }
-        //}
-
-        public void Add(Reservation reservation)
+        
+        public ReservationRepository() 
         {
-            reservations.Add(reservation);
-            Debug.WriteLine(reservations.ToString());
+            InitializeRepository();
         }
+
+
+        private void InitializeRepository()
+        {
+            try
+            {   // Open the text file using a stream reader.
+                using (StreamReader sr = new StreamReader("Reservations.csv"))
+                {
+                    string line = sr.ReadLine();
+
+                    while (line != null)
+                    {
+                        string[] parts = line.Split(',');
+
+                        string seatInfo = parts[2];
+
+                        string[] seats = seatInfo.Split("|");
+
+                        Customer newCus = new Customer(parts[3], parts[4], parts[5]);
+
+                        Movie stupidMovie = new Movie(parts[8], parts[9], parts[10], parts[11]);
+
+                        Show newShow = new Show(parts[6], DateTime.Parse(parts[7]), stupidMovie);
+
+                        Add(int.Parse(parts[0]), double.Parse(parts[1]), seats, newShow, newCus);
+
+                        line = sr.ReadLine();
+                    }
+                }
+            }
+            catch (IOException)
+            {
+                throw;
+            }
+        }
+
+        public Reservation Add(int amount, double price, string[] seat, Show show, Customer customer)
+        {
+            Reservation result = null;
+
+            if (amount > 0 && price > 0 && seat != null && seat.Length > 0 && show != null && customer != null)
+            {
+                result = new Reservation(amount, price, seat, show, customer);
+
+                reservations.Add(result);
+
+                Debug.WriteLine(reservations.ToString());
+            }
+            else
+            {
+                throw new ArgumentException("Not all arguments are valid");
+            }
+
+            return result;
+        }
+
 
         public void Save(int id) 
         {
