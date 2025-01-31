@@ -13,5 +13,15 @@
             Date = date;
             Movie = movie;
         }
+
+        public string GetMovieInfo()
+        {
+            return $"{Movie.Title};{Movie.Genre};{Movie.Duration};{Movie.Director}";
+        }
+
+        public override string ToString()
+        {
+            return $"{StartTime};{Date.ToShortDateString}";
+        }
     }
 }
