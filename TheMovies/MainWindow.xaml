@@ -77,7 +77,6 @@
 
 
 
-        <Label x:Name="lblError" Grid.Row="3" Content="Something went wrong ¯\_(ツ)_/¯" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="14" Foreground="Red"/>
 
     </Grid>
 </Window>
