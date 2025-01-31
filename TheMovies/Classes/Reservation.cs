@@ -32,6 +32,12 @@
             return customer.ToString();
         }
 
+        public string GetMovieInfoFromShow()
+        {
+            return show.GetMovieInfo();
+        }
+
+
         public string GetShowInfo()
         {
             return show.ToString();
