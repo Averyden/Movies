@@ -135,9 +135,17 @@ namespace TheMovies
 
         }
 
-        private void OnShowClicked() 
+        private void OnShowClicked()
         {
-            MessageBox.Show($"Kunde Email: {SelectedReserve.CusMail}\nKunde Navn: {SelectedReserve.CusName}\nMængde Biletter for reservation: {SelectedReserve.Amount}\nBiograf for reservation: {Cinema}\nBiograf lokation: {CinemaLocation}\nDato for reservation: {ShowDate.ToShortDateString()}\nTidspunkt for forstilling: {StartTime}", "Information for reservation");
+            if (_selectedReserve != null)
+            {
+                MessageBox.Show($"Kunde Email: {SelectedReserve.CusMail}\nKunde Navn: {SelectedReserve.CusName}\nMængde Biletter for reservation: {SelectedReserve.Amount}\nBiograf for reservation: {Cinema}\nBiograf lokation: {CinemaLocation}\nDato for reservation: {ShowDate.ToShortDateString()}\nTidspunkt for forstilling: {StartTime}", "Information for reservation");
+
+            } else
+            {
+                MessageBox.Show("Der er ikke valgt nogen reservation at kigge på", "Fejl");
+            }
+
         }
 
         private void OnAddClicked()
