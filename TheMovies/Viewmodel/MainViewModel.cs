@@ -11,6 +11,7 @@ namespace TheMovies
         private ReservationViewModel _selectedReserve;
         public ICommand AddCommand { get; }
 
+        private int _amount; 
         private string _startTime;
         private string _phone;
         private string _email;
@@ -55,8 +56,8 @@ namespace TheMovies
             }
         }
 
-        // TODO: ask leif about type consistency
-        private int _amount; 
+        // Clever hack but it does not look pretty
+        // Find a fix please.
         public string Amount
         {
             get { return _amount.ToString(); }
