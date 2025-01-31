@@ -49,7 +49,7 @@
         </ComboBox>
 
 
-        <ListBox ItemsSource="{Binding ReserveVM}" SelectedItem="{Binding SelectedReservation}" Grid.Row="1" Grid.RowSpan="2" Grid.Column="2" BorderBrush="Black" Margin="30,0,30,0">
+        <ListBox ItemsSource="{Binding ReserveVM}" SelectedItem="{Binding SelectedReserve}" Grid.Row="1" Grid.RowSpan="2" Grid.Column="2" BorderBrush="Black" Margin="30,0,30,0">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
@@ -71,8 +71,10 @@
             <ComboBoxItem Content="Århus"/>
         </ComboBox>
 
-        <Button x:Name="btnDel"  Content="Slet" Grid.Row="3" Grid.Column="2" Height="30" Margin="150,0,25,0" VerticalAlignment="Center" FontSize="20"/>
-        <Button x:Name="btnAdd" Content="Tilføj"  Grid.Row="3" Grid.Column="2" Height="30" Margin="25,0,150,0" VerticalAlignment="Center" FontSize="20" Command="{Binding AddCommand}"/>
+        <Button x:Name="btnDel"  Content="Slet" Grid.Row="3" Grid.Column="2" Height="30" Margin="150,0,25,50" VerticalAlignment="Center" FontSize="20"/>
+        <Button x:Name="btnAdd" Content="Tilføj"  Grid.Row="3" Grid.Column="2" Height="30" Margin="25,0,150,50" VerticalAlignment="Center" FontSize="20" Command="{Binding AddCommand}"/>
+        <Button x:Name="btnShow" Content="Vis Info"  Grid.Row="3" Grid.Column="2" Height="30" Margin="75,50,75,0" VerticalAlignment="Center" FontSize="20" Command="{Binding ShowCommand}"/>
+
 
 
         <Label x:Name="lblError" Grid.Row="3" Content="Something went wrong ¯\_(ツ)_/¯" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="14" Foreground="Red"/>
