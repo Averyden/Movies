@@ -1,6 +1,10 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration.Json;
+using System.Data;
+using Microsoft.Extensions.Configuration;
 
 namespace TheMovies
 {
@@ -8,10 +12,17 @@ namespace TheMovies
     {
         private List<Reservation> reservations = new List<Reservation>();
 
+        private readonly string conString;
+
         private readonly string filePath = "Reservations.txt";
 
         public ReservationRepository() 
         {
+
+            IConfigurationRoot config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+
+            conString = config.GetConnectionString("Jens");
+
             if (File.Exists(filePath))
             {
                 Debug.WriteLine("ok we good YIPPEE");
