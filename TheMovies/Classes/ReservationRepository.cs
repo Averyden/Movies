@@ -109,11 +109,11 @@ namespace TheMovies
             {
                 con.Open();
                 using (SqlCommand cmd = new SqlCommand(
-                    "INSERT INTO SHOWTABLE (MovieId, DateTime) " +
-                    "VALUES (@movieId, @dateTime); SELECT SCOPE_IDENTITY();", con))
+                    "INSERT INTO SHOWTABLE (MovieId, Date) " +
+                    "VALUES (@movieId, @date); SELECT SCOPE_IDENTITY();", con))
                 {
                     cmd.Parameters.AddWithValue("@movieId", DBNull.Value);  
-                    cmd.Parameters.AddWithValue("@dateTime", show.Date);
+                    cmd.Parameters.AddWithValue("@date", show.Date);
 
                     var newShowId = cmd.ExecuteScalar(); 
                     return Convert.ToInt32(newShowId);
@@ -149,7 +149,7 @@ namespace TheMovies
                 {
                     while (reader.Read())
                     {
-                        string[] seatArray = reader["Seat"].ToString().Split(',');
+                        string[] seatArray = reader["Seats"].ToString().Split(',');
                         Show show = new Show("TBD", DateTime.Now, new Movie("TBD", "TBD", "TBD", "TBD"));
                         Customer customer = new Customer("TBD", "TBD", "TBD"); 
 
