@@ -19,6 +19,11 @@
             id++;
         }
 
+        public void SetId(int newId)
+        {
+            id = newId;
+        }
+
         public string GetMovieInfo()
         {
             return $"{Movie.Title};{Movie.Genre};{Movie.Duration};{Movie.Director}";
