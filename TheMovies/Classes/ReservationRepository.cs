@@ -26,14 +26,14 @@ namespace TheMovies
             {
                 con.Open();
                 using (SqlCommand cmd = new SqlCommand(
-                    "INSERT INTO RESERVATION (CustomerId, ShowId, Amount, SalesPrice, Seat) " +
-                    "VALUES (@customer, @show, @amount, @price, @seat)", con))
+                    "INSERT INTO RESERVATION (CustomerId, ShowId, Amount, SalesPrice, Seats) " +
+                    "VALUES (@customer, @show, @amount, @price, @seats)", con))
                 {
                     cmd.Parameters.Add("@customer", SqlDbType.Int).Value = customer.Id;
                     cmd.Parameters.Add("@show", SqlDbType.Int).Value = show.Id;
                     cmd.Parameters.Add("@amount", SqlDbType.Int).Value = amount;
                     cmd.Parameters.Add("@price", SqlDbType.Float).Value = price;
-                    cmd.Parameters.Add("@seat", SqlDbType.NVarChar).Value = string.Join(",", seat);
+                    cmd.Parameters.Add("@seats", SqlDbType.NVarChar).Value = string.Join(",", seat);
 
                     cmd.ExecuteNonQuery();
 
@@ -43,6 +43,20 @@ namespace TheMovies
             }
 
             return result;
+        }
+
+        private bool CustomerExists(int customerId)
+        {
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand(
+                    "SELECT COUNT(1) FROM CUSTOMER WHERE CustomerId = @customerId", con))
+                {
+                    cmd.Parameters.AddWithValue("@customerId", customerId);
+                    return (int)cmd.ExecuteScalar() > 0;
+                }
+            }
         }
 
         public void Remove(int id)
