@@ -59,6 +59,26 @@ namespace TheMovies
             }
         }
 
+        private int InsertNewCustomer(Customer customer)
+        {
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand(
+                    "INSERT INTO CUSTOMER (Name, Email, Telefonnummer, EmployeeId) " +
+                    "VALUES (@name, @email, @phone, @employeeId); SELECT SCOPE_IDENTITY();", con))
+                {
+                    cmd.Parameters.AddWithValue("@name", customer.Name);
+                    cmd.Parameters.AddWithValue("@email", customer.Email);
+                    cmd.Parameters.AddWithValue("@phone", customer.PhoneNumber);
+                    cmd.Parameters.AddWithValue("@employeeId", DBNull.Value);
+
+                    var newId = cmd.ExecuteScalar();
+                    return Convert.ToInt32(newId);
+                }
+            }
+        }
+
         public void Remove(int id)
         {
             using (SqlConnection con = new SqlConnection(conString))
