@@ -112,7 +112,7 @@ namespace TheMovies
                     "INSERT INTO SHOWTABLE (MovieId, Date) " +
                     "VALUES (@movieId, @date); SELECT SCOPE_IDENTITY();", con))
                 {
-                    cmd.Parameters.AddWithValue("@movieId", DBNull.Value);  
+                    cmd.Parameters.AddWithValue("@movieId", 1);  
                     cmd.Parameters.AddWithValue("@date", show.Date);
 
                     var newShowId = cmd.ExecuteScalar(); 
@@ -139,7 +139,7 @@ namespace TheMovies
 
         public List<Reservation> GetAll()
         {
-            reservations.Clear(); 
+            reservations.Clear();
 
             using (SqlConnection con = new SqlConnection(conString))
             {
@@ -149,13 +149,18 @@ namespace TheMovies
                 {
                     while (reader.Read())
                     {
+                        int showId = Convert.ToInt32(reader["ShowId"]);
+                        int customerId = Convert.ToInt32(reader["CustomerId"]);
+
+                        Show show = GetShowById(showId);
+
+                        Customer customer = GetCustomerById(customerId);
+
                         string[] seatArray = reader["Seats"].ToString().Split(',');
-                        Show show = new Show("TBD", DateTime.Now, new Movie("TBD", "TBD", "TBD", "TBD"));
-                        Customer customer = new Customer("TBD", "TBD", "TBD"); 
 
                         reservations.Add(new Reservation(
                             Convert.ToInt32(reader["Amount"]),
-                            Convert.ToDouble(reader["SalesPrice"]), 
+                            Convert.ToDouble(reader["SalesPrice"]),
                             seatArray,
                             show,
                             customer
@@ -166,5 +171,92 @@ namespace TheMovies
 
             return reservations;
         }
+
+        private Show GetShowById(int showId)
+        {
+            Show show = null;
+
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand("SELECT * FROM SHOWTABLE WHERE ShowId = @showId", con))
+                {
+                    cmd.Parameters.AddWithValue("@showId", showId);
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            int movieId = Convert.ToInt32(reader["MovieId"]);
+                            DateTime showTime = Convert.ToDateTime(reader["Date"]);
+
+                            Movie movie = GetMovieById(movieId);
+
+                            show = new Show(reader["Time"].ToString(), showTime, movie);
+                            show.SetId(showId);  
+                        }
+                    }
+                }
+            }
+
+            return show;
+        }
+
+        private Customer GetCustomerById(int customerId)
+        {
+            Customer customer = null;
+
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand("SELECT * FROM CUSTOMER WHERE CustomerId = @customerId", con))
+                {
+                    cmd.Parameters.AddWithValue("@customerId", customerId);
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            string name = reader["Name"].ToString();
+                            string email = reader["Email"].ToString();
+                            string phone = reader["Telefonnummer"].ToString();
+
+                            customer = new Customer(name, email, phone);
+                            customer.SetId(customerId);  
+                        }
+                    }
+                }
+            }
+
+            return customer;
+        }
+
+        private Movie GetMovieById(int movieId)
+        {
+            Movie movie = null;
+
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand("SELECT * FROM MOVIE WHERE MovieId = @movieId", con))
+                {
+                    cmd.Parameters.AddWithValue("@movieId", movieId);
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            string title = reader["Title"].ToString();
+                            string director = reader["Director"].ToString();
+                            string genre = reader["Genre"].ToString();
+                            string duration = reader["Duration"].ToString();
+
+                            movie = new Movie(title, genre, duration, director);
+                        }
+                    }
+                }
+            }
+
+            return movie;
+        }
     }
 }
+
+
