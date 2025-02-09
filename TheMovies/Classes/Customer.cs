@@ -2,6 +2,8 @@
 {
     public class Customer
     {
+        private static int id = 0;
+        public int Id { get { return id; } }
         public string Name { get; set; }
         public string Email { get; set; }
         public string PhoneNumber { get; set; }
@@ -10,6 +12,8 @@
             Name = name;
             Email = email;
             PhoneNumber = phone;
+            id++;
+
         }
 
         public override string ToString() {
