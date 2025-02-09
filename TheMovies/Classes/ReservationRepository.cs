@@ -24,7 +24,7 @@ namespace TheMovies
 
             if (!CustomerExists(customer.Id))
             {
-                customer.Id = InsertNewCustomer(customer);
+                customer.SetId(InsertNewCustomer(customer));
             }
 
             using (SqlConnection con = new SqlConnection(conString))
