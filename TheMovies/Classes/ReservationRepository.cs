@@ -84,6 +84,38 @@ namespace TheMovies
             }
         }
 
+        private bool ShowExists(int showId)
+        {
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand(
+                    "SELECT COUNT(1) FROM SHOWTABLE WHERE ShowId = @showId", con))
+                {
+                    cmd.Parameters.AddWithValue("@showId", showId);
+                    return (int)cmd.ExecuteScalar() > 0;
+                }
+            }
+        }
+
+        private int InsertNewShow(Show show)
+        {
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand(
+                    "INSERT INTO SHOWTABLE (MovieId, DateTime) " +
+                    "VALUES (@movieId, @dateTime); SELECT SCOPE_IDENTITY();", con))
+                {
+                    cmd.Parameters.AddWithValue("@movieId", DBNull.Value);  
+                    cmd.Parameters.AddWithValue("@dateTime", show.Date);
+
+                    var newShowId = cmd.ExecuteScalar(); 
+                    return Convert.ToInt32(newShowId);
+                }
+            }
+        }
+
         public void Remove(int id)
         {
             using (SqlConnection con = new SqlConnection(conString))
