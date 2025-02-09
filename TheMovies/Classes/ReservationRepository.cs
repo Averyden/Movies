@@ -22,6 +22,11 @@ namespace TheMovies
         {
             Reservation result = null;
 
+            if (!CustomerExists(customer.Id))
+            {
+                customer.Id = InsertNewCustomer(customer);
+            }
+
             using (SqlConnection con = new SqlConnection(conString))
             {
                 con.Open();
