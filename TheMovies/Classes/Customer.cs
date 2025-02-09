@@ -19,5 +19,11 @@
         public override string ToString() {
             return $"{Name};{Email};{PhoneNumber}";
         }
+
+        public void SetId(int newId)
+        {
+            id = newId;
+        }
+
     }
 }
