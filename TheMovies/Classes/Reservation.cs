@@ -7,7 +7,7 @@
 
         private Customer customer; 
 
-        private static int id = 0;
+        public int Id { get; set; }
         public int Amount { get; set; }
         public double Price { get; set; }
         public string[] Seat { get; set; }
@@ -19,7 +19,6 @@
             Seat = seat;
             this.show = show;
             this.customer = customer;
-            id++;
         }
 
         public double CalculatePrice()

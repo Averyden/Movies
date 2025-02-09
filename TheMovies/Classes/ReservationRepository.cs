@@ -1,143 +1,262 @@
-﻿using System.Diagnostics;
-using System.IO;
-using System;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
+using System.Data;
 
 namespace TheMovies
 {
     public class ReservationRepository
     {
+        private readonly string conString;
         private List<Reservation> reservations = new List<Reservation>();
 
-        private readonly string filePath = "Reservations.txt";
-
-        public ReservationRepository() 
+        public ReservationRepository()
         {
-            if (File.Exists(filePath))
-            {
-                Debug.WriteLine("ok we good YIPPEE");
-            }
-            else
-            {
-                try
-                {
-                    using (FileStream fs = File.Create(filePath))
-                    {
-                        Debug.WriteLine("File created successfully!");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"An error occurred while creating the file: {ex.Message}");
-                }
-            }
+            IConfigurationRoot config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .Build();
 
-            InitializeRepository();
-        }
-
-
-        private void InitializeRepository()
-        {
-            try
-            {
-                using (StreamReader sr = new StreamReader(filePath))
-                {
-                    string line;
-                    while ((line = sr.ReadLine()) != null)
-                    {
-                        string[] parts = line.Split(',');
-
-                        string seatInfo = parts[2];
-                        string[] seats = seatInfo.Split("|");
-
-                        Customer newCus = new Customer(parts[3], parts[4], parts[5]);
-
-                        Movie stupidMovie = new Movie(parts[8], parts[9], parts[10], parts[11]);
-
-                        Show newShow = new Show(parts[6], DateTime.Parse(parts[7]), stupidMovie);
-
-                        
-                        Reservation reservation = new Reservation(
-                            int.Parse(parts[0]),
-                            double.Parse(parts[1]),
-                            seats,
-                            newShow,
-                            newCus
-                        );
-
-                        reservations.Add(reservation); 
-                    }
-                }
-            }
-            catch (IOException ex)
-            {
-                Debug.WriteLine($"File Read Error: {ex.Message}");
-                throw;
-            }
+            conString = config.GetConnectionString("Jens");
         }
 
         public Reservation Add(int amount, double price, string[] seat, Show show, Customer customer)
         {
             Reservation result = null;
 
-            if (amount > 0 && price > 0 && seat != null && seat.Length > 0 && show != null && customer != null)
+            if (!CustomerExists(customer.Id))
             {
-                result = new Reservation(amount, price, seat, show, customer);
-
-                reservations.Add(result);
-
-                Debug.WriteLine(reservations.ToString());
-            }
-            else
-            {
-                throw new ArgumentException("Not all arguments are valid");
+                customer.SetId(InsertNewCustomer(customer));
             }
 
-            Save();
+            if (!ShowExists(show.Id))
+            {
+               show.SetId(InsertNewShow(show));
+            }
+
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand(
+                    "INSERT INTO RESERVATION (CustomerId, ShowId, Amount, SalesPrice, Seats) " +
+                    "VALUES (@customer, @show, @amount, @price, @seats)", con))
+                {
+                    cmd.Parameters.Add("@customer", SqlDbType.Int).Value = customer.Id;
+                    cmd.Parameters.Add("@show", SqlDbType.Int).Value = show.Id;
+                    cmd.Parameters.Add("@amount", SqlDbType.Int).Value = amount;
+                    cmd.Parameters.Add("@price", SqlDbType.Float).Value = price;
+                    cmd.Parameters.Add("@seats", SqlDbType.NVarChar).Value = string.Join(",", seat);
+
+                    cmd.ExecuteNonQuery();
+
+                    result = new Reservation(amount, price, seat, show, customer);
+                    reservations.Add(result);
+                }
+            }
 
             return result;
         }
 
-
-        public void Save()
+        private bool CustomerExists(int customerId)
         {
-            try
+            using (SqlConnection con = new SqlConnection(conString))
             {
-                using (StreamWriter sw = new StreamWriter(filePath))
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand(
+                    "SELECT COUNT(1) FROM CUSTOMER WHERE CustomerId = @customerId", con))
                 {
-                    foreach (Reservation item in reservations)
+                    cmd.Parameters.AddWithValue("@customerId", customerId);
+                    return (int)cmd.ExecuteScalar() > 0;
+                }
+            }
+        }
+
+        private int InsertNewCustomer(Customer customer)
+        {
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand(
+                    "INSERT INTO CUSTOMER (Name, Email, Telefonnummer, EmployeeId) " +
+                    "VALUES (@name, @email, @phone, @employeeId); SELECT SCOPE_IDENTITY();", con))
+                {
+                    cmd.Parameters.AddWithValue("@name", customer.Name);
+                    cmd.Parameters.AddWithValue("@email", customer.Email);
+                    cmd.Parameters.AddWithValue("@phone", customer.PhoneNumber);
+                    cmd.Parameters.AddWithValue("@employeeId", DBNull.Value);
+
+                    var newId = cmd.ExecuteScalar();
+                    return Convert.ToInt32(newId);
+                }
+            }
+        }
+
+        private bool ShowExists(int showId)
+        {
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand(
+                    "SELECT COUNT(1) FROM SHOWTABLE WHERE ShowId = @showId", con))
+                {
+                    cmd.Parameters.AddWithValue("@showId", showId);
+                    return (int)cmd.ExecuteScalar() > 0;
+                }
+            }
+        }
+
+        private int InsertNewShow(Show show)
+        {
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand(
+                    "INSERT INTO SHOWTABLE (MovieId, Date) " +
+                    "VALUES (@movieId, @date); SELECT SCOPE_IDENTITY();", con))
+                {
+                    cmd.Parameters.AddWithValue("@movieId", 1);  
+                    cmd.Parameters.AddWithValue("@date", show.Date);
+
+                    var newShowId = cmd.ExecuteScalar(); 
+                    return Convert.ToInt32(newShowId);
+                }
+            }
+        }
+
+        public void Remove(int id)
+        {
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand(
+                    "DELETE FROM Reservation WHERE CustomerId = @id OR ShowId = @id", con)) 
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            reservations.RemoveAll(r => r.Id == id); 
+        }
+
+        public List<Reservation> GetAll()
+        {
+            reservations.Clear();
+
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand("SELECT * FROM Reservation", con))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
                     {
-                        string final = $"{item.Amount},{item.Price},";
+                        int showId = Convert.ToInt32(reader["ShowId"]);
+                        int customerId = Convert.ToInt32(reader["CustomerId"]);
 
-                        string seatString = string.Join("|", item.Seat);
-                        final += $"{seatString},";
+                        Show show = GetShowById(showId);
 
-                        string[] cusInfo = item.GetCustomerInfo().Split(";");
-                        final += $"{cusInfo[0]},{cusInfo[1]},{cusInfo[2]},";
+                        Customer customer = GetCustomerById(customerId);
 
-                        string[] showInfo = item.GetShowInfo().Split(";");
-                        final += $"{showInfo[0]},{showInfo[1]},";
+                        string[] seatArray = reader["Seats"].ToString().Split(',');
 
-                        string[] movieInfo = item.GetMovieInfoFromShow().Split(";");
-                        final += $"{movieInfo[0]},{movieInfo[1]},{movieInfo[2]},{movieInfo[3]}";
-
-                        sw.WriteLine(final);
+                        reservations.Add(new Reservation(
+                            Convert.ToInt32(reader["Amount"]),
+                            Convert.ToDouble(reader["SalesPrice"]),
+                            seatArray,
+                            show,
+                            customer
+                        ));
                     }
                 }
             }
-            catch (IOException ex)
-            {
-                Debug.WriteLine($"File Write Error: {ex.Message}");
-                throw;
-            }
-        }
 
-
-        public void Remove(int id) { }
-
-        public List<Reservation> GetAll() 
-        {
             return reservations;
         }
 
+        private Show GetShowById(int showId)
+        {
+            Show show = null;
+
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand("SELECT * FROM SHOWTABLE WHERE ShowId = @showId", con))
+                {
+                    cmd.Parameters.AddWithValue("@showId", showId);
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            int movieId = Convert.ToInt32(reader["MovieId"]);
+                            DateTime showTime = Convert.ToDateTime(reader["Date"]);
+
+                            Movie movie = GetMovieById(movieId);
+
+                            show = new Show(reader["Time"].ToString(), showTime, movie);
+                            show.SetId(showId);  
+                        }
+                    }
+                }
+            }
+
+            return show;
+        }
+
+        private Customer GetCustomerById(int customerId)
+        {
+            Customer customer = null;
+
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand("SELECT * FROM CUSTOMER WHERE CustomerId = @customerId", con))
+                {
+                    cmd.Parameters.AddWithValue("@customerId", customerId);
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            string name = reader["Name"].ToString();
+                            string email = reader["Email"].ToString();
+                            string phone = reader["Telefonnummer"].ToString();
+
+                            customer = new Customer(name, email, phone);
+                            customer.SetId(customerId);  
+                        }
+                    }
+                }
+            }
+
+            return customer;
+        }
+
+        private Movie GetMovieById(int movieId)
+        {
+            Movie movie = null;
+
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand("SELECT * FROM MOVIE WHERE MovieId = @movieId", con))
+                {
+                    cmd.Parameters.AddWithValue("@movieId", movieId);
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            string title = reader["Title"].ToString();
+                            string director = reader["Director"].ToString();
+                            string genre = reader["Genre"].ToString();
+                            string duration = reader["Duration"].ToString();
+
+                            movie = new Movie(title, genre, duration, director);
+                        }
+                    }
+                }
+            }
+
+            return movie;
+        }
     }
 }
+
+
