@@ -1,154 +1,83 @@
-﻿using System.Diagnostics;
-using System.IO;
-using System;
-using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration.Json;
-using System.Data;
+﻿using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 
 namespace TheMovies
 {
     public class ReservationRepository
     {
-        private List<Reservation> reservations = new List<Reservation>();
-
         private readonly string conString;
 
-        private readonly string filePath = "Reservations.txt";
-
-        public ReservationRepository() 
+        public ReservationRepository()
         {
-
-            IConfigurationRoot config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+            IConfigurationRoot config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .Build();
 
             conString = config.GetConnectionString("Jens");
-
-            if (File.Exists(filePath))
-            {
-                Debug.WriteLine("ok we good YIPPEE");
-            }
-            else
-            {
-                try
-                {
-                    using (FileStream fs = File.Create(filePath))
-                    {
-                        Debug.WriteLine("File created successfully!");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"An error occurred while creating the file: {ex.Message}");
-                }
-            }
-
-            InitializeRepository();
-        }
-
-
-        private void InitializeRepository()
-        {
-            try
-            {
-                using (StreamReader sr = new StreamReader(filePath))
-                {
-                    string line;
-                    while ((line = sr.ReadLine()) != null)
-                    {
-                        string[] parts = line.Split(',');
-
-                        string seatInfo = parts[2];
-                        string[] seats = seatInfo.Split("|");
-
-                        Customer newCus = new Customer(parts[3], parts[4], parts[5]);
-
-                        Movie stupidMovie = new Movie(parts[8], parts[9], parts[10], parts[11]);
-
-                        Show newShow = new Show(parts[6], DateTime.Parse(parts[7]), stupidMovie);
-
-                        
-                        Reservation reservation = new Reservation(
-                            int.Parse(parts[0]),
-                            double.Parse(parts[1]),
-                            seats,
-                            newShow,
-                            newCus
-                        );
-
-                        reservations.Add(reservation); 
-                    }
-                }
-            }
-            catch (IOException ex)
-            {
-                Debug.WriteLine($"File Read Error: {ex.Message}");
-                throw;
-            }
         }
 
         public Reservation Add(int amount, double price, string[] seat, Show show, Customer customer)
         {
             Reservation result = null;
-
-            if (amount > 0 && price > 0 && seat != null && seat.Length > 0 && show != null && customer != null)
+            using (SqlConnection con = new SqlConnection(conString))
             {
-                result = new Reservation(amount, price, seat, show, customer);
+                con.Open();
+                string query = "INSERT INTO Reservation (Amount, Price, Seat, ShowId, CustomerId) OUTPUT INSERTED.Id VALUES (@amount, @price, @seat, @show, @customer)";
+                using (SqlCommand cmd = new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue("@amount", amount);
+                    cmd.Parameters.AddWithValue("@price", price);
+                    cmd.Parameters.AddWithValue("@seat", string.Join(",", seat));
+                    cmd.Parameters.AddWithValue("@show", show.Id);
+                    cmd.Parameters.AddWithValue("@customer", customer.Id);
 
-                reservations.Add(result);
-
-                Debug.WriteLine(reservations.ToString());
+                    int newId = (int)cmd.ExecuteScalar();
+                    result = new Reservation(amount, price, seat, show, customer) { Id = newId };
+                }
             }
-            else
-            {
-                throw new ArgumentException("Not all arguments are valid");
-            }
-
-            Save();
-
             return result;
         }
 
-
-        public void Save()
+        public void Remove(int id)
         {
-            try
+            using (SqlConnection con = new SqlConnection(conString))
             {
-                using (StreamWriter sw = new StreamWriter(filePath))
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand("DELETE FROM Reservation WHERE Id = @id", con))
                 {
-                    foreach (Reservation item in reservations)
+                    cmd.Parameters.AddWithValue("@id", id);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public List<Reservation> GetAll()
+        {
+            List<Reservation> reservations = new List<Reservation>();
+            using (SqlConnection con = new SqlConnection(conString))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand("SELECT * FROM Reservation", con))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
                     {
-                        string final = $"{item.Amount},{item.Price},";
+                        string[] seatArray = reader["Seat"].ToString().Split(',');
+                        Show show = new Show("TBD", DateTime.Now, new Movie("TBD", "TBD", "TBD", "TBD")); // Fetch from DB in real scenario
+                        Customer customer = new Customer("TBD", "TBD", "TBD"); // Fetch from DB in real scenario
 
-                        string seatString = string.Join("|", item.Seat);
-                        final += $"{seatString},";
-
-                        string[] cusInfo = item.GetCustomerInfo().Split(";");
-                        final += $"{cusInfo[0]},{cusInfo[1]},{cusInfo[2]},";
-
-                        string[] showInfo = item.GetShowInfo().Split(";");
-                        final += $"{showInfo[0]},{showInfo[1]},";
-
-                        string[] movieInfo = item.GetMovieInfoFromShow().Split(";");
-                        final += $"{movieInfo[0]},{movieInfo[1]},{movieInfo[2]},{movieInfo[3]}";
-
-                        sw.WriteLine(final);
+                        reservations.Add(new Reservation(
+                            Convert.ToInt32(reader["Amount"]),
+                            Convert.ToDouble(reader["Price"]),
+                            seatArray,
+                            show,
+                            customer
+                        )
+                        { Id = Convert.ToInt32(reader["Id"]) });
                     }
                 }
             }
-            catch (IOException ex)
-            {
-                Debug.WriteLine($"File Write Error: {ex.Message}");
-                throw;
-            }
-        }
-
-
-        public void Remove(int id) { }
-
-        public List<Reservation> GetAll() 
-        {
             return reservations;
         }
-
     }
 }
