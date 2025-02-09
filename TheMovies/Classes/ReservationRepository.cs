@@ -22,12 +22,12 @@ namespace TheMovies
             using (SqlConnection con = new SqlConnection(conString))
             {
                 con.Open();
-                string query = "INSERT INTO Reservation (Amount, Price, Seat, ShowId, CustomerId) OUTPUT INSERTED.Id VALUES (@amount, @price, @seat, @show, @customer)";
+                string query = "INSERT INTO Reservation (Amount, Price, Seats, ShowId, CustomerId) OUTPUT INSERTED.Id VALUES (@amount, @price, @seats, @show, @customer)";
                 using (SqlCommand cmd = new SqlCommand(query, con))
                 {
                     cmd.Parameters.AddWithValue("@amount", amount);
                     cmd.Parameters.AddWithValue("@price", price);
-                    cmd.Parameters.AddWithValue("@seat", string.Join(",", seat));
+                    cmd.Parameters.AddWithValue("@seats", string.Join(",", seat));
                     cmd.Parameters.AddWithValue("@show", show.Id);
                     cmd.Parameters.AddWithValue("@customer", customer.Id);
 
